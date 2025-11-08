@@ -1,0 +1,444 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>测测你的动物属性</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'PingFang SC', 'Microsoft YaHei', sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 800px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 20px;
+            padding: 40px;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+        }
+
+        h1 {
+            text-align: center;
+            color: #667eea;
+            font-size: 2.5em;
+            margin-bottom: 10px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+
+        .subtitle {
+            text-align: center;
+            color: #666;
+            margin-bottom: 30px;
+            font-size: 1.1em;
+        }
+
+        .question-container {
+            margin-bottom: 30px;
+            padding: 25px;
+            background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
+            border-radius: 15px;
+            display: none;
+        }
+
+        .question-container.active {
+            display: block;
+            animation: fadeIn 0.5s;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        .question-title {
+            font-size: 1.3em;
+            color: #333;
+            margin-bottom: 20px;
+            font-weight: bold;
+        }
+
+        .choices {
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+        }
+
+        .choice {
+            padding: 15px 20px;
+            background: white;
+            border: 2px solid #e0e0e0;
+            border-radius: 10px;
+            cursor: pointer;
+            transition: all 0.3s;
+            font-size: 1.05em;
+        }
+
+        .choice:hover {
+            border-color: #667eea;
+            transform: translateX(5px);
+            box-shadow: 0 5px 15px rgba(102, 126, 234, 0.2);
+        }
+
+        .choice.selected {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border-color: #667eea;
+        }
+
+        .progress {
+            height: 8px;
+            background: #e0e0e0;
+            border-radius: 10px;
+            margin-bottom: 20px;
+            overflow: hidden;
+        }
+
+        .progress-bar {
+            height: 100%;
+            background: linear-gradient(90deg, #667eea 0%, #764ba2 100%);
+            width: 0%;
+            transition: width 0.3s;
+        }
+
+        .btn {
+            display: block;
+            width: 200px;
+            margin: 30px auto 0;
+            padding: 15px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border: none;
+            border-radius: 10px;
+            font-size: 1.1em;
+            cursor: pointer;
+            transition: transform 0.3s;
+        }
+
+        .btn:hover {
+            transform: scale(1.05);
+        }
+
+        .btn:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+
+        .result {
+            display: none;
+            text-align: center;
+        }
+
+        .result.active {
+            display: block;
+            animation: fadeIn 0.5s;
+        }
+
+        .result-animal {
+            font-size: 4em;
+            margin: 20px 0;
+        }
+
+        .result-title {
+            font-size: 2em;
+            color: #667eea;
+            margin-bottom: 20px;
+            font-weight: bold;
+        }
+
+        .result-description {
+            font-size: 1.2em;
+            line-height: 1.8;
+            color: #444;
+            text-align: left;
+            padding: 20px;
+            background: #f8f9fa;
+            border-radius: 10px;
+            margin-top: 20px;
+        }
+
+        .start-screen {
+            text-align: center;
+        }
+
+        .start-screen.hidden {
+            display: none;
+        }
+
+        .quiz-screen {
+            display: none;
+        }
+
+        .quiz-screen.active {
+            display: block;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🐾 测测你的动物属性 🐾</h1>
+
+        <div class="start-screen" id="startScreen">
+            <p class="subtitle">通过10个问题，发现你内心深处的动物灵魂</p>
+            <button class="btn" onclick="startQuiz()">开始测试</button>
+        </div>
+
+        <div class="quiz-screen" id="quizScreen">
+            <div class="progress">
+                <div class="progress-bar" id="progressBar"></div>
+            </div>
+
+            <div id="questionsContainer"></div>
+
+            <button class="btn" id="nextBtn" onclick="nextQuestion()" disabled>下一题</button>
+        </div>
+
+        <div class="result" id="result">
+            <div class="result-animal" id="resultAnimal"></div>
+            <div class="result-title" id="resultTitle"></div>
+            <div class="result-description" id="resultDescription"></div>
+            <button class="btn" onclick="restartQuiz()">重新测试</button>
+        </div>
+    </div>
+
+    <script>
+        const animals = {
+            lion: { name: '狮子', emoji: '🦁', desc: '你拥有天生的领导魅力，勇敢而自信。在团队中你总是能够挺身而出，用你的气场和决断力带领大家前进。你热爱挑战，面对困难从不退缩，内心充满了对成功的渴望。你的存在让周围的人感到安心，因为你总能在关键时刻做出正确的决定。' },
+            snake: { name: '蛇', emoji: '🐍', desc: '你善于观察和思考，总能在不经意间洞察事物的本质。你行事低调但极具智慧，懂得在适当的时机展现自己的能力。你的直觉敏锐，能够准确判断周围的环境和人心。虽然外表冷静，但内心其实充满了对生活的热情和追求。' },
+            eagle: { name: '鹰', emoji: '🦅', desc: '你拥有远大的眼光和卓越的洞察力，总能看到别人看不到的机会。你追求自由和独立，不喜欢被束缚。你的思维敏捷，行动果断，总能在竞争中脱颖而出。你对自己的目标坚定不移，并且有能力将梦想变为现实。' },
+            dolphin: { name: '海豚', emoji: '🐬', desc: '你聪明、友善，拥有极强的社交能力。你善解人意，总能轻松融入各种环境。你的乐观和活力感染着周围的人，让大家都愿意与你亲近。你重视友谊和团队合作，相信团结的力量能够创造奇迹。你的创造力丰富，总能想出有趣的点子。' },
+            fox: { name: '狐狸', emoji: '🦊', desc: '你机智灵活，善于应对各种复杂的局面。你的适应能力极强，无论在什么环境下都能找到生存和发展的方法。你懂得察言观色，知道如何与不同的人打交道。你的聪明才智让你在生活中总能游刃有余，轻松化解困难。' },
+            wolf: { name: '狼', emoji: '🐺', desc: '你忠诚、坚韧，有着强烈的团队精神。你重视家人和朋友，愿意为他们付出一切。你的意志力坚强，即使面对再大的困难也不会轻易放弃。你懂得策略和耐心，知道如何为长远的目标而努力。你的存在给团队带来力量和安全感。' },
+            cat: { name: '猫', emoji: '🐱', desc: '你独立、优雅，拥有独特的个人魅力。你知道如何享受生活，懂得在忙碌中为自己找到放松的方式。你有自己的节奏和原则，不会轻易被他人影响。你的敏感和细腻让你能够感知到生活中的美好细节，你懂得爱自己。' },
+            panda: { name: '熊猫', emoji: '🐼', desc: '你温和、可爱，总能给周围的人带来欢乐和治愈。你性格平和，不喜欢争执，更愿意用温柔的方式解决问题。你珍惜宁静的时光，懂得在简单的事物中找到幸福。你的存在本身就是一种祝福，让世界变得更加美好。' },
+            tiger: { name: '老虎', emoji: '🐯', desc: '你充满力量和激情，做事雷厉风行。你有着强烈的自尊心和进取心，不甘于平庸。你的魄力和胆识让你在竞争中占据优势，你敢于冒险，勇于开拓新的领域。你的能量和热情能够点燃周围人的斗志。' },
+            rabbit: { name: '兔子', emoji: '🐰', desc: '你温柔、敏感，拥有一颗善良的心。你善于倾听，总能给予他人温暖和安慰。你做事细心谨慎，重视每一个细节。你的纯真和真诚让人感到舒适，你用自己的方式为世界带来温暖和美好。' },
+            owl: { name: '猫头鹰', emoji: '🦉', desc: '你睿智、沉稳，喜欢思考人生的深层意义。你的知识丰富，见解独到，总能在关键时刻提供有价值的建议。你喜欢安静的环境，在独处中获得灵感。你的理性和智慧让你成为值得信赖的智者。' },
+            horse: { name: '马', emoji: '🐴', desc: '你热情、奔放，充满了对生活的热爱。你向往自由，喜欢在广阔的天地间驰骋。你精力充沛，总是充满干劲，愿意为梦想全力奔跑。你的乐观和积极影响着周围的人，激励大家勇往直前。' },
+            penguin: { name: '企鹅', emoji: '🐧', desc: '你忠诚、踏实，是值得依赖的伙伴。你适应能力强，即使在艰难的环境中也能保持乐观。你重视家庭和友情，愿意为爱的人坚守。你的坚持和毅力让你能够克服重重困难，最终实现目标。' },
+            bee: { name: '蜜蜂', emoji: '🐝', desc: '你勤奋、负责，总是全心全意投入工作。你有很强的组织能力和协作精神，懂得团队的重要性。你的努力和付出为集体创造价值，你从帮助他人中获得成就感。你的敬业精神值得所有人学习。' },
+            butterfly: { name: '蝴蝶', emoji: '🦋', desc: '你充满变化和惊喜，总能带来新鲜感。你热爱美好的事物，追求艺术和创意。你的人生经历了许多转变，每一次都让你变得更加美丽和成熟。你的优雅和灵动让生活充满诗意。' },
+            elephant: { name: '大象', emoji: '🐘', desc: '你稳重、可靠，拥有强大的内心力量。你记忆力好，重视传统和经验。你关心家人和朋友，愿意用你的力量保护他们。你的智慧和温和让人敬重，你是团队中不可或缺的支柱。' },
+            peacock: { name: '孔雀', emoji: '🦚', desc: '你自信、优雅，懂得展现自己的美丽和才华。你有艺术气质，欣赏生活中的精致和美好。你的魅力吸引着周围的目光，你享受被欣赏的感觉。你相信自己的价值，并且勇于表达自我。' },
+            koala: { name: '考拉', emoji: '🐨', desc: '你慵懒、可爱，懂得享受慢节奏的生活。你不喜欢被催促，更愿意按照自己的节奏前进。你珍惜安逸和舒适，知道如何让自己放松。你的温和和随性让周围的人感到轻松愉快。' },
+            octopus: { name: '章鱼', emoji: '🐙', desc: '你多才多艺，能够同时处理多项任务。你的思维灵活，善于变通，总能找到创新的解决方案。你适应能力极强，在各种环境中都能生存发展。你的神秘感和独特性让人着迷。' },
+            deer: { name: '鹿', emoji: '🦌', desc: '你优雅、温柔，拥有纯净的心灵。你敏感细腻，能够感知到他人的情绪。你向往自然和自由，喜欢在宁静中寻找内心的平和。你的美丽不仅在外表，更在于你善良的内心和高贵的气质。' },
+            parrot: { name: '鹦鹉', emoji: '🦜', desc: '你活泼、健谈，总是社交场合的焦点。你善于沟通表达，能够用语言打动他人。你学习能力强，喜欢接触新事物。你的热情和幽默让周围充满欢声笑语，你是天生的社交达人。' },
+            bear: { name: '熊', emoji: '🐻', desc: '你强大、温和，外表威严内心柔软。你有很强的保护欲，愿意为爱的人提供安全感。你喜欢简单直接的生活方式，珍惜与家人朋友相处的时光。你的力量和温暖让人感到可靠和安心。' },
+            chameleon: { name: '变色龙', emoji: '🦎', desc: '你适应性极强，能够在不同环境中自如切换。你善于观察和模仿，懂得融入各种场合。你的灵活性让你在复杂的社会中游刃有余。你懂得保护自己，也知道何时该展现真实的自我。' },
+            swan: { name: '天鹅', emoji: '🦢', desc: '你优雅、高贵，拥有脱俗的气质。你对自己要求严格，追求完美和卓越。你的美丽是经过努力修炼而来的，你懂得水面下的付出。你的坚持和自律让你在人群中格外出众。' },
+            monkey: { name: '猴子', emoji: '🐵', desc: '你聪明、活泼，充满好奇心和探索欲。你思维敏捷，反应迅速，总能想出有趣的点子。你喜欢玩乐和社交，生活对你来说充满乐趣。你的机灵和幽默让你在任何场合都受欢迎。' },
+            giraffe: { name: '长颈鹿', emoji: '🦒', desc: '你视野开阔，总能看到别人看不到的远方。你温和友善，与世无争，但这不代表你没有追求。你的独特视角让你能够发现生活中的美好和机遇。你的优雅和从容让人印象深刻。' },
+            sloth: { name: '树懒', emoji: '🦥', desc: '你懂得慢生活的真谛，不被快节奏所裹挟。你知道什么对自己最重要，并且坚持自己的生活方式。你的淡定和从容是一种智慧，你相信慢慢来反而能走得更远。你用自己的节奏享受生命的每一刻。' },
+            raccoon: { name: '浣熊', emoji: '🦝', desc: '你好奇心强，喜欢探索和发现新事物。你聪明机智，善于解决问题。你有很强的适应能力，在城市和自然中都能自如生活。你的灵巧和智慧让你总能找到生存和发展的方法。' }
+        };
+
+        const questions = [
+            {
+                q: '周末你更喜欢做什么？',
+                choices: [
+                    { text: '呼朋唤友，组织聚会活动', scores: { lion: 2, dolphin: 3, parrot: 3, monkey: 2 } },
+                    { text: '独自在家，享受安静时光', scores: { cat: 3, owl: 3, koala: 2, sloth: 3 } },
+                    { text: '去户外探险，感受自然', scores: { eagle: 3, horse: 3, deer: 2, giraffe: 2 } },
+                    { text: '学习新技能或看书充电', scores: { owl: 2, octopus: 2, fox: 2, raccoon: 2 } }
+                ]
+            },
+            {
+                q: '面对困难时，你通常会？',
+                choices: [
+                    { text: '直接面对，勇敢挑战', scores: { lion: 3, tiger: 3, bear: 2, eagle: 2 } },
+                    { text: '冷静分析，寻找最佳方案', scores: { fox: 3, owl: 3, snake: 2, octopus: 2 } },
+                    { text: '寻求朋友帮助，共同解决', scores: { dolphin: 3, wolf: 3, bee: 2, penguin: 2 } },
+                    { text: '先观察情况，等待时机', scores: { snake: 3, chameleon: 3, deer: 2, cat: 2 } }
+                ]
+            },
+            {
+                q: '在团队中，你的角色通常是？',
+                choices: [
+                    { text: '领导者，负责决策方向', scores: { lion: 3, eagle: 2, tiger: 2 } },
+                    { text: '智囊，提供策略建议', scores: { owl: 3, fox: 3, snake: 2 } },
+                    { text: '执行者，踏实完成任务', scores: { bee: 3, elephant: 3, penguin: 2 } },
+                    { text: '协调者，维护团队和谐', scores: { dolphin: 3, panda: 2, deer: 2 } },
+                    { text: '创意者，提供新想法', scores: { monkey: 3, butterfly: 2, octopus: 2, parrot: 2 } }
+                ]
+            },
+            {
+                q: '你对自己的外表形象？',
+                choices: [
+                    { text: '非常重视，经常打扮', scores: { peacock: 3, swan: 3, butterfly: 2 } },
+                    { text: '注重得体，但不过分', scores: { cat: 2, deer: 2, fox: 2 } },
+                    { text: '舒适为主，简单自然', scores: { bear: 2, panda: 2, koala: 3, sloth: 2 } },
+                    { text: '看场合，灵活调整', scores: { chameleon: 3, dolphin: 2, octopus: 2 } }
+                ]
+            },
+            {
+                q: '你的社交风格是？',
+                choices: [
+                    { text: '热情外向，朋友很多', scores: { parrot: 3, monkey: 3, dolphin: 2, horse: 2 } },
+                    { text: '选择性社交，朋友精不在多', scores: { wolf: 3, cat: 2, swan: 2 } },
+                    { text: '比较内向，享受独处', scores: { owl: 3, cat: 3, koala: 2, sloth: 2 } },
+                    { text: '随和友善，适应各种场合', scores: { panda: 3, rabbit: 2, deer: 2, chameleon: 2 } }
+                ]
+            },
+            {
+                q: '对于冒险和挑战，你的态度是？',
+                choices: [
+                    { text: '非常喜欢，越刺激越好', scores: { eagle: 3, tiger: 3, monkey: 2 } },
+                    { text: '有兴趣，但会谨慎评估', scores: { fox: 3, snake: 2, raccoon: 2 } },
+                    { text: '不太喜欢，更爱稳定', scores: { elephant: 3, penguin: 2, bee: 2 } },
+                    { text: '能避免就避免', scores: { rabbit: 3, koala: 2, sloth: 2, panda: 2 } }
+                ]
+            },
+            {
+                q: '你的工作/学习风格是？',
+                choices: [
+                    { text: '高效快速，追求结果', scores: { lion: 2, tiger: 2, eagle: 3, bee: 2 } },
+                    { text: '注重细节，精益求精', scores: { swan: 3, bee: 3, owl: 2 } },
+                    { text: '灵活创新，不拘一格', scores: { monkey: 3, octopus: 3, butterfly: 2, fox: 2 } },
+                    { text: '稳扎稳打，循序渐进', scores: { elephant: 3, penguin: 2, bear: 2 } }
+                ]
+            },
+            {
+                q: '在压力下，你会？',
+                choices: [
+                    { text: '变得更有动力和专注', scores: { lion: 2, tiger: 3, eagle: 2 } },
+                    { text: '保持冷静，理性应对', scores: { owl: 3, snake: 2, fox: 2 } },
+                    { text: '寻求支持和帮助', scores: { dolphin: 2, wolf: 2, rabbit: 2, penguin: 2 } },
+                    { text: '需要时间独处调整', scores: { cat: 3, deer: 2, koala: 2 } }
+                ]
+            },
+            {
+                q: '你最看重生活中的什么？',
+                choices: [
+                    { text: '成就和成功', scores: { lion: 3, eagle: 3, tiger: 2, swan: 2 } },
+                    { text: '自由和独立', scores: { cat: 3, horse: 3, eagle: 2 } },
+                    { text: '友情和归属感', scores: { wolf: 3, dolphin: 3, penguin: 2, bee: 2 } },
+                    { text: '平和与快乐', scores: { panda: 3, koala: 3, sloth: 2, rabbit: 2 } },
+                    { text: '智慧和成长', scores: { owl: 3, fox: 2, octopus: 2 } }
+                ]
+            },
+            {
+                q: '描述你的睡眠习惯？',
+                choices: [
+                    { text: '精力充沛，睡眠时间短', scores: { bee: 2, monkey: 2, tiger: 2 } },
+                    { text: '作息规律，早睡早起', scores: { elephant: 2, penguin: 2, bee: 3 } },
+                    { text: '夜猫子，喜欢熬夜', scores: { owl: 3, cat: 3, snake: 2, raccoon: 2 } },
+                    { text: '能睡就睡，很爱睡觉', scores: { koala: 3, sloth: 3, panda: 2, bear: 2 } }
+                ]
+            }
+        ];
+
+        let currentQuestion = 0;
+        let scores = {};
+        let selectedChoice = null;
+
+        function startQuiz() {
+            document.getElementById('startScreen').classList.add('hidden');
+            document.getElementById('quizScreen').classList.add('active');
+            initScores();
+            showQuestion();
+        }
+
+        function initScores() {
+            Object.keys(animals).forEach(animal => scores[animal] = 0);
+        }
+
+        function showQuestion() {
+            const container = document.getElementById('questionsContainer');
+            container.innerHTML = '';
+
+            const questionDiv = document.createElement('div');
+            questionDiv.className = 'question-container active';
+
+            const question = questions[currentQuestion];
+            questionDiv.innerHTML = `
+                <div class="question-title">问题 ${currentQuestion + 1}/10: ${question.q}</div>
+                <div class="choices" id="choices"></div>
+            `;
+
+            container.appendChild(questionDiv);
+
+            const choicesDiv = document.getElementById('choices');
+            question.choices.forEach((choice, index) => {
+                const choiceDiv = document.createElement('div');
+                choiceDiv.className = 'choice';
+                choiceDiv.textContent = choice.text;
+                choiceDiv.onclick = () => selectChoice(index);
+                choicesDiv.appendChild(choiceDiv);
+            });
+
+            updateProgress();
+            selectedChoice = null;
+            document.getElementById('nextBtn').disabled = true;
+        }
+
+        function selectChoice(index) {
+            document.querySelectorAll('.choice').forEach(c => c.classList.remove('selected'));
+            document.querySelectorAll('.choice')[index].classList.add('selected');
+            selectedChoice = index;
+            document.getElementById('nextBtn').disabled = false;
+        }
+
+        function nextQuestion() {
+            const choice = questions[currentQuestion].choices[selectedChoice];
+            Object.keys(choice.scores).forEach(animal => {
+                scores[animal] += choice.scores[animal];
+            });
+
+            currentQuestion++;
+
+            if (currentQuestion < questions.length) {
+                showQuestion();
+            } else {
+                showResult();
+            }
+        }
+
+        function showResult() {
+            document.getElementById('quizScreen').classList.remove('active');
+
+            let maxScore = 0;
+            let resultAnimal = '';
+
+            Object.keys(scores).forEach(animal => {
+                if (scores[animal] > maxScore) {
+                    maxScore = scores[animal];
+                    resultAnimal = animal;
+                }
+            });
+
+            const animal = animals[resultAnimal];
+            document.getElementById('resultAnimal').textContent = animal.emoji;
+            document.getElementById('resultTitle').textContent = '你是：' + animal.name;
+            document.getElementById('resultDescription').textContent = animal.desc;
+            document.getElementById('result').classList.add('active');
+        }
+
+        function updateProgress() {
+            const progress = ((currentQuestion + 1) / questions.length) * 100;
+            document.getElementById('progressBar').style.width = progress + '%';
+        }
+
+        function restartQuiz() {
+            currentQuestion = 0;
+            selectedChoice = null;
+            initScores();
+            document.getElementById('result').classList.remove('active');
+            document.getElementById('startScreen').classList.remove('hidden');
+            document.getElementById('quizScreen').classList.remove('active');
+        }
+    </script>
+</body>
+</html>
