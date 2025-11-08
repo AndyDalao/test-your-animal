@@ -1,0 +1,348 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>高级会员订阅 - 测测你的动物属性</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'PingFang SC', 'Microsoft YaHei', sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .container {
+            max-width: 500px;
+            width: 100%;
+            background: white;
+            border-radius: 20px;
+            padding: 40px;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+        }
+
+        h1 {
+            text-align: center;
+            color: #667eea;
+            font-size: 2em;
+            margin-bottom: 10px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+
+        .subtitle {
+            text-align: center;
+            color: #666;
+            margin-bottom: 30px;
+            font-size: 0.95em;
+        }
+
+        .price-tag {
+            background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+            color: white;
+            padding: 20px;
+            border-radius: 15px;
+            text-align: center;
+            margin-bottom: 30px;
+        }
+
+        .price {
+            font-size: 3em;
+            font-weight: bold;
+        }
+
+        .price-desc {
+            font-size: 0.9em;
+            margin-top: 5px;
+            opacity: 0.9;
+        }
+
+        .benefits {
+            background: #f8f9fa;
+            padding: 20px;
+            border-radius: 10px;
+            margin-bottom: 30px;
+        }
+
+        .benefits h3 {
+            color: #333;
+            margin-bottom: 15px;
+            font-size: 1.1em;
+        }
+
+        .benefit-item {
+            padding: 8px 0;
+            color: #555;
+            border-bottom: 1px solid #e0e0e0;
+        }
+
+        .benefit-item:last-child {
+            border-bottom: none;
+        }
+
+        .benefit-item::before {
+            content: "✨ ";
+        }
+
+        .form-group {
+            margin-bottom: 20px;
+        }
+
+        label {
+            display: block;
+            color: #333;
+            margin-bottom: 8px;
+            font-weight: 500;
+        }
+
+        input {
+            width: 100%;
+            padding: 12px 15px;
+            border: 2px solid #e0e0e0;
+            border-radius: 10px;
+            font-size: 1em;
+            transition: all 0.3s;
+            font-family: inherit;
+        }
+
+        input:focus {
+            outline: none;
+            border-color: #667eea;
+            box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+        }
+
+        .btn {
+            width: 100%;
+            padding: 15px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border: none;
+            border-radius: 10px;
+            font-size: 1.2em;
+            cursor: pointer;
+            transition: transform 0.3s;
+            font-weight: bold;
+            margin-top: 10px;
+        }
+
+        .btn:hover {
+            transform: scale(1.02);
+        }
+
+        .btn:active {
+            transform: scale(0.98);
+        }
+
+        .back-link {
+            text-align: center;
+            margin-top: 20px;
+        }
+
+        .back-link a {
+            color: #667eea;
+            text-decoration: none;
+        }
+
+        .back-link a:hover {
+            text-decoration: underline;
+        }
+
+        .modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0,0,0,0.5);
+            z-index: 1000;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .modal.active {
+            display: flex;
+            animation: fadeIn 0.3s;
+        }
+
+        .modal-content {
+            background: white;
+            padding: 40px;
+            border-radius: 20px;
+            text-align: center;
+            max-width: 400px;
+            margin: 20px;
+            animation: slideIn 0.3s;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; }
+            to { opacity: 1; }
+        }
+
+        @keyframes slideIn {
+            from { transform: translateY(-50px); opacity: 0; }
+            to { transform: translateY(0); opacity: 1; }
+        }
+
+        .modal-emoji {
+            font-size: 4em;
+            margin-bottom: 20px;
+        }
+
+        .modal-title {
+            font-size: 1.5em;
+            color: #333;
+            margin-bottom: 15px;
+            font-weight: bold;
+        }
+
+        .modal-text {
+            color: #666;
+            line-height: 1.6;
+            margin-bottom: 25px;
+        }
+
+        .modal-btn {
+            padding: 12px 30px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border: none;
+            border-radius: 10px;
+            font-size: 1.1em;
+            cursor: pointer;
+            transition: transform 0.3s;
+        }
+
+        .modal-btn:hover {
+            transform: scale(1.05);
+        }
+
+        .secure-badge {
+            text-align: center;
+            color: #999;
+            font-size: 0.85em;
+            margin-top: 15px;
+        }
+
+        .secure-badge::before {
+            content: "🔒 ";
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🌟 高级会员订阅 🌟</h1>
+        <p class="subtitle">解锁全部28种动物属性分析</p>
+
+        <div class="price-tag">
+            <div class="price">¥998</div>
+            <div class="price-desc">终身会员 / 仅此一次</div>
+        </div>
+
+        <div class="benefits">
+            <h3>会员专属权益：</h3>
+            <div class="benefit-item">查看全部28种稀有动物结果</div>
+            <div class="benefit-item">获得详细性格分析报告</div>
+            <div class="benefit-item">每月更新专属测试题目</div>
+            <div class="benefit-item">解锁隐藏动物：独角兽和龙</div>
+            <div class="benefit-item">无限次重测机会</div>
+            <div class="benefit-item">专属会员勋章和证书</div>
+        </div>
+
+        <form id="subscribeForm" onsubmit="handleSubmit(event)">
+            <div class="form-group">
+                <label for="cardNumber">信用卡号</label>
+                <input type="text" id="cardNumber" placeholder="1234 5678 9012 3456" required maxlength="19">
+            </div>
+
+            <div class="form-group">
+                <label for="cardName">持卡人姓名</label>
+                <input type="text" id="cardName" placeholder="张三" required>
+            </div>
+
+            <div class="form-group">
+                <label for="expiry">有效期</label>
+                <input type="text" id="expiry" placeholder="MM/YY" required maxlength="5">
+            </div>
+
+            <div class="form-group">
+                <label for="cvv">CVV安全码</label>
+                <input type="text" id="cvv" placeholder="123" required maxlength="3">
+            </div>
+
+            <div class="form-group">
+                <label for="password">支付密码</label>
+                <input type="password" id="password" placeholder="请输入支付密码" required>
+            </div>
+
+            <div class="secure-badge">256位加密传输，安全可靠</div>
+
+            <button type="submit" class="btn">立即订阅</button>
+        </form>
+
+        <div class="back-link">
+            <a href="test-your-animal.html">← 返回免费测试</a>
+        </div>
+    </div>
+
+    <div class="modal" id="modal">
+        <div class="modal-content">
+            <div class="modal-emoji">😂</div>
+            <div class="modal-title">哈哈，开个玩笑！</div>
+            <div class="modal-text">
+                这只是一个恶作剧页面！<br>
+                我们不会收集任何支付信息。<br>
+                所有测试都是完全免费的！<br><br>
+                请永远不要在不安全的网站<br>输入真实的信用卡信息哦～
+            </div>
+            <button class="modal-btn" onclick="closeModal()">我知道了</button>
+        </div>
+    </div>
+
+    <script>
+        // Format card number input
+        document.getElementById('cardNumber').addEventListener('input', function(e) {
+            let value = e.target.value.replace(/\s/g, '');
+            let formattedValue = value.match(/.{1,4}/g)?.join(' ') || value;
+            e.target.value = formattedValue;
+        });
+
+        // Format expiry input
+        document.getElementById('expiry').addEventListener('input', function(e) {
+            let value = e.target.value.replace(/\D/g, '');
+            if (value.length >= 2) {
+                value = value.slice(0, 2) + '/' + value.slice(2, 4);
+            }
+            e.target.value = value;
+        });
+
+        // Only allow numbers for CVV
+        document.getElementById('cvv').addEventListener('input', function(e) {
+            e.target.value = e.target.value.replace(/\D/g, '');
+        });
+
+        function handleSubmit(event) {
+            event.preventDefault();
+            document.getElementById('modal').classList.add('active');
+            return false;
+        }
+
+        function closeModal() {
+            document.getElementById('modal').classList.remove('active');
+            document.getElementById('subscribeForm').reset();
+        }
+    </script>
+</body>
+</html>
